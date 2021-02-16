@@ -9,3 +9,6 @@ Legacy code had to undergo some changes in function calls.
 
 The tab section was added to further provide researchers with other possibilities to 
 present their data.
+
+## Future work
+Implementing a better network representation using the igraph package in R.
