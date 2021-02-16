@@ -1,0 +1,86 @@
+source("networkV2.R")
+
+library(shiny)
+library(shinydashboard)
+
+g <- NULL
+data <- NULL
+
+
+
+
+# Define UI for application that draws a histogram
+ui <- dashboardPage(
+  dashboardHeader( title = "Gene Network"),
+  
+  # Application title
+  #titlePanel("Gene Network"),
+  
+  # Sidebar with a slider input for number of bins 
+  dashboardSidebar(
+    sidebarMenu(
+      fileInput("file", label = ""),
+      actionButton(inputId="network","Plot"),
+      sliderInput(inputId = "tNum", label = "Perturbation:",min = 1,max = 20, value = 1),
+      sliderInput(inputId = "time", label = "Time step:",min = 1,max = 10,value = 1),
+      
+      selectInput("variable", "Network Fit:",vals())
+    )),
+    
+  body <- dashboardBody(  
+    
+    mainPanel(
+      #tabPanel set up
+      tabsetPanel( type = "tabs",
+                   
+      #Network Plot panel             
+      tabPanel("Plot",plotOutput("network")),
+      #Summary Plot Panel
+      tabPanel("Summary", tableOutput("table"))
+      )
+    )
+  ) 
+  
+  
+  # Show a plot of the generated distribution
+)
+
+
+#----------------------------------SERVER----------------------------------
+
+# Define server logic required to draw a histogram
+server <- function(input, output) {
+  observeEvent(
+    
+    #Input file conditions
+    input$network,{
+
+      if ( is.null(input$file)) return(NULL)
+      inFile <- input$file
+      file <- inFile$datapath
+      
+      # load the file into new environment and get it from there
+      e = new.env()
+      name <- load(file, envir = e)
+      data <- e[[name]]
+      
+      
+      # Plot the data
+      output$network <- renderPlot({
+
+        g <- generateGraph(data,as.integer(input$variable))
+
+        g <- recolor(data,g,as.integer(input$variable),input$tNum,input$time)
+        
+        newG =  layout_in_circle(graph = g, order = V(g))
+      
+        return(plot(g,layout = newG))
+      
+      })
+    })
+  
+  
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
